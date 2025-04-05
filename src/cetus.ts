@@ -3,6 +3,8 @@ import {
   TickMath,
   ClmmPoolUtil,
   AddLiquidityFixTokenParams,
+  Percentage,
+  adjustForCoinSlippage,
 } from '@cetusprotocol/cetus-sui-clmm-sdk';
 import { BN } from 'bn.js';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
@@ -96,6 +98,83 @@ export class Cetus {
     const tx = await this.client.fullClient.sendTransaction(
       this.sender,
       createAddLiquidityTxPayload
+    );
+
+    console.log('Transaction response:', tx);
+  }
+
+  async remove_liquidity(pool_id: string, position_id: string): Promise<void> {
+    // Implement the logic to remove liquidity here
+    console.log('Removing liquidity');
+
+    const pool = await this.client.Pool.getPool(pool_id);
+    console.log('pool', pool);
+
+    const position = await this.client.Position.getPositionById(position_id);
+
+    console.log('position', position);
+
+    const lowerSqrtPrice = TickMath.tickIndexToSqrtPriceX64(position.tick_lower_index);
+    const upperSqrtPrice = TickMath.tickIndexToSqrtPriceX64(position.tick_upper_index);
+
+    console.log('lowerSqrtPrice', lowerSqrtPrice, 'upperSqrtPrice', upperSqrtPrice);
+
+    const ticksHandle = pool.ticks_handle;
+
+    const tickLower = await this.client.Pool.getTickDataByIndex(
+      ticksHandle,
+      position.tick_lower_index
+    );
+    const tickUpper = await this.client.Pool.getTickDataByIndex(
+      ticksHandle,
+      position.tick_upper_index
+    );
+
+    console.log('tickLower', tickLower, 'tickUpper', tickUpper);
+
+    const liquidity = new BN(position.liquidity);
+    const slippage = new Percentage(new BN(5), new BN(100));
+
+    const curSqrtPrice = new BN(pool.current_sqrt_price);
+    const coinAmounts = ClmmPoolUtil.getCoinAmountFromLiquidity(
+      liquidity,
+      curSqrtPrice,
+      lowerSqrtPrice,
+      upperSqrtPrice,
+      false
+    );
+
+    console.log('coinAmounts', coinAmounts);
+
+    const { tokenMaxA, tokenMaxB } = adjustForCoinSlippage(coinAmounts, slippage, false);
+    console.log('tokenMaxA', tokenMaxA, 'tokenMaxB', tokenMaxB);
+
+    // get all rewarders of position
+    const rewards: any[] = [];
+
+    console.log('rewards', rewards);
+
+    const rewardCoinTypes = rewards
+      .filter((item) => Number(item.amount_owed) > 0)
+      .map((item) => item.coin_address);
+
+    // build close position payload
+    const closePositionTransactionPayload =
+      await this.client.Position.closePositionTransactionPayload({
+        coinTypeA: pool.coinTypeA,
+        coinTypeB: pool.coinTypeB,
+        min_amount_a: tokenMaxA.toString(),
+        min_amount_b: tokenMaxB.toString(),
+        rewarder_coin_types: [...rewardCoinTypes],
+        pool_id: pool.poolAddress,
+        pos_id: position_id,
+      });
+
+    console.log('closePositionTransactionPayload', closePositionTransactionPayload);
+
+    const tx = await this.client.fullClient.sendTransaction(
+      this.sender,
+      closePositionTransactionPayload
     );
 
     console.log('Transaction response:', tx);

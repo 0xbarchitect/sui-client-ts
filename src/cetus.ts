@@ -5,19 +5,23 @@ import CetusClmmSDK, {
   AddLiquidityFixTokenParams,
   Percentage,
   adjustForCoinSlippage,
+  d,
 } from '@cetusprotocol/cetus-sui-clmm-sdk';
 import { BN } from 'bn.js';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 
 export class Cetus {
   private client: CetusClmmSDK;
   private sender: Ed25519Keypair;
+  private suiClient: SuiClient;
 
   constructor(network: 'mainnet' | 'testnet', sender: Ed25519Keypair) {
     console.log('Cetus initialized');
     const senderAddress = sender.getPublicKey().toSuiAddress();
     this.client = initCetusSDK({ network: network, wallet: senderAddress });
     this.sender = sender;
+    this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
   }
 
   async add_liquidity(
@@ -184,5 +188,94 @@ export class Cetus {
     );
 
     console.log('Transaction response:', tx);
+  }
+
+  async create_pool(
+    coin_type_a: string,
+    coin_type_b: string,
+    decimals_a: number,
+    decimals_b: number,
+    amount_a: number,
+    amount_b: number,
+    fix_amount_a: boolean
+  ): Promise<void> {
+    console.log(`Creating pool with coin types ${coin_type_a} and ${coin_type_b}`);
+    // Implement the logic to create a pool here
+    // initialize sqrt_price
+    const initialize_sqrt_price = TickMath.priceToSqrtPriceX64(d(0.0001), 6, 6).toString();
+    const tick_spacing = 10;
+    const current_tick_index = TickMath.sqrtPriceX64ToTickIndex(new BN(initialize_sqrt_price));
+    // build tick range
+    const tick_lower = TickMath.getPrevInitializableTickIndex(
+      new BN(current_tick_index).toNumber(),
+      new BN(tick_spacing).toNumber()
+    );
+    const tick_upper = TickMath.getNextInitializableTickIndex(
+      new BN(current_tick_index).toNumber(),
+      new BN(tick_spacing).toNumber()
+    );
+    // input token amount
+    const fix_coin_amount = new BN(amount_a);
+    // input token amount is token a
+    // slippage value 0.05 means 5%
+    const slippage = 0.05;
+    const cur_sqrt_price = new BN(initialize_sqrt_price);
+    // Estimate liquidity and token amount from one amounts
+    const liquidityInput = ClmmPoolUtil.estLiquidityAndcoinAmountFromOneAmounts(
+      tick_lower,
+      tick_upper,
+      fix_coin_amount,
+      fix_amount_a,
+      true,
+      slippage,
+      cur_sqrt_price
+    );
+    // Estimate  token a and token b amount
+    const input_amount_a = fix_amount_a
+      ? fix_coin_amount.toNumber()
+      : liquidityInput.tokenMaxA.toNumber();
+    const input_amount_b = fix_amount_a
+      ? liquidityInput.tokenMaxB.toNumber()
+      : fix_coin_amount.toNumber();
+
+    console.log(
+      `Input amount A: ${input_amount_a}, Input amount B: ${input_amount_b}, Tick lower: ${tick_lower}, Tick upper: ${tick_upper}`
+    );
+
+    const coinMetadataA = await this.suiClient.getCoinMetadata({ coinType: coin_type_a })!;
+    if (!coinMetadataA) {
+      throw new Error('Failed to fetch metadata for coinTypeA');
+    }
+    const coinMetadataAID = coinMetadataA.id;
+
+    const coinMetadataB = await this.suiClient.getCoinMetadata({ coinType: coin_type_b });
+    if (!coinMetadataB) {
+      throw new Error('Failed to fetch metadata for coinTypeB');
+    }
+    const coinMetadataBID = coinMetadataB.id;
+
+    // build creatPoolPayload Payload
+    const createPoolPayload = await this.client.Pool.createPoolTransactionPayload({
+      amount_a: input_amount_a,
+      amount_b: input_amount_b,
+      fix_amount_a,
+      tick_lower,
+      tick_upper,
+      metadata_a: coinMetadataAID!,
+      metadata_b: coinMetadataBID!,
+      slippage,
+      tick_spacing,
+      initialize_sqrt_price,
+      uri: '',
+      coinTypeA: coin_type_a,
+      coinTypeB: coin_type_b,
+    });
+
+    console.log('createPoolPayload', createPoolPayload);
+
+    console.log('Sending transaction...');
+    const res = await this.client.fullClient.sendTransaction(this.sender, createPoolPayload);
+
+    console.log('Transaction response:', res);
   }
 }

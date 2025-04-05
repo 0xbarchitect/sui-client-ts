@@ -1,0 +1,28 @@
+{
+  "name": "demo-cetus-sdk",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "watch": "tsc -w",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@cetusprotocol/cetus-sui-clmm-sdk": "^5.3.4",
+    "@mysten/sui": "^1.26.1",
+    "dotenv": "^16.4.7",
+    "tslib": "^2.8.1"
+  }
+}

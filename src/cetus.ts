@@ -1,4 +1,4 @@
-import {
+import CetusClmmSDK, {
   initCetusSDK,
   TickMath,
   ClmmPoolUtil,
@@ -10,7 +10,7 @@ import { BN } from 'bn.js';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
 export class Cetus {
-  private client: any;
+  private client: CetusClmmSDK;
   private sender: Ed25519Keypair;
 
   constructor(network: 'mainnet' | 'testnet', sender: Ed25519Keypair) {
@@ -95,6 +95,8 @@ export class Cetus {
 
     console.log('Transaction payload:', createAddLiquidityTxPayload);
 
+    // Send the transaction
+    console.log('Sending transaction...');
     const tx = await this.client.fullClient.sendTransaction(
       this.sender,
       createAddLiquidityTxPayload
@@ -144,16 +146,17 @@ export class Cetus {
       false
     );
 
-    console.log('coinAmounts', coinAmounts);
+    console.log('coinAmounts', coinAmounts.coinA.toNumber(), coinAmounts.coinB.toNumber());
 
     const { tokenMaxA, tokenMaxB } = adjustForCoinSlippage(coinAmounts, slippage, false);
-    console.log('tokenMaxA', tokenMaxA, 'tokenMaxB', tokenMaxB);
+    console.log('tokenMaxA', tokenMaxA.toNumber(), 'tokenMaxB', tokenMaxB.toNumber());
 
     // get all rewarders of position
-    const rewards: any[] = [];
-
-    console.log('rewards', rewards);
-
+    const rewards: any[] = await this.client.Rewarder.posRewardersAmount(
+      pool_id,
+      pool.position_manager.positions_handle,
+      position_id
+    );
     const rewardCoinTypes = rewards
       .filter((item) => Number(item.amount_owed) > 0)
       .map((item) => item.coin_address);
@@ -163,15 +166,18 @@ export class Cetus {
       await this.client.Position.closePositionTransactionPayload({
         coinTypeA: pool.coinTypeA,
         coinTypeB: pool.coinTypeB,
+        pool_id,
+        pos_id: position_id,
         min_amount_a: tokenMaxA.toString(),
         min_amount_b: tokenMaxB.toString(),
-        rewarder_coin_types: [...rewardCoinTypes],
-        pool_id: pool.poolAddress,
-        pos_id: position_id,
+        rewarder_coin_types: rewardCoinTypes,
+        collect_fee: true,
       });
 
     console.log('closePositionTransactionPayload', closePositionTransactionPayload);
 
+    // send transaction
+    console.log('Sending transaction...');
     const tx = await this.client.fullClient.sendTransaction(
       this.sender,
       closePositionTransactionPayload

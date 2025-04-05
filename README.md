@@ -3,7 +3,7 @@ Typescript client code to interact with SUI Defi ecosystem.
 
 ## Prerequisites
 
-- [NodeJS v20](https://nodejs.org)
+- [NodeJS v20](https://nodejs.org/en/blog/release/v20.9.0)
 
 ## Setup
 

@@ -9,6 +9,12 @@ Typescript client code to interact with SUI Defi ecosystem.
 
 - Create `.env` file from template and fill in secrets
 
+## Install 
+
+```sh
+$ npm install
+```
+
 ## Build 
 
 ```sh

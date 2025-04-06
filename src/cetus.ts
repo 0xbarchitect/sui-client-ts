@@ -200,11 +200,11 @@ export class Cetus {
     fix_amount_a: boolean
   ): Promise<void> {
     console.log(`Creating pool with coin types ${coin_type_a} and ${coin_type_b}`);
-    // Implement the logic to create a pool here
     // initialize sqrt_price
     const initialize_sqrt_price = TickMath.priceToSqrtPriceX64(d(0.0001), 6, 6).toString();
     const tick_spacing = 10;
     const current_tick_index = TickMath.sqrtPriceX64ToTickIndex(new BN(initialize_sqrt_price));
+
     // build tick range
     const tick_lower = TickMath.getPrevInitializableTickIndex(
       new BN(current_tick_index).toNumber(),
@@ -214,12 +214,15 @@ export class Cetus {
       new BN(current_tick_index).toNumber(),
       new BN(tick_spacing).toNumber()
     );
+
     // input token amount
     const fix_coin_amount = new BN(amount_a);
     // input token amount is token a
     // slippage value 0.05 means 5%
     const slippage = 0.05;
+
     const cur_sqrt_price = new BN(initialize_sqrt_price);
+
     // Estimate liquidity and token amount from one amounts
     const liquidityInput = ClmmPoolUtil.estLiquidityAndcoinAmountFromOneAmounts(
       tick_lower,
@@ -230,6 +233,7 @@ export class Cetus {
       slippage,
       cur_sqrt_price
     );
+
     // Estimate  token a and token b amount
     const input_amount_a = fix_amount_a
       ? fix_coin_amount.toNumber()
@@ -277,5 +281,73 @@ export class Cetus {
     const res = await this.client.fullClient.sendTransaction(this.sender, createPoolPayload);
 
     console.log('Transaction response:', res);
+  }
+
+  async swap(
+    pool_id: string,
+    amount_a: number,
+    amount_b: number,
+    decimals_a: number,
+    decimals_b: number,
+    a2b: boolean,
+    by_amount_in: boolean
+  ): Promise<void> {
+    console.log(`Swapping in pool ${pool_id} with amounts ${amount_a} and ${amount_b}`);
+    // fix input token amount
+    const coinAmount = new BN(a2b ? amount_a : amount_b);
+    // slippage value
+    const slippage = Percentage.fromDecimal(d(5));
+    // Fetch pool data
+    const pool = await this.client.Pool.getPool(pool_id);
+
+    // Estimated amountIn amountOut fee
+    const preSwapEstimation: any = await this.client.Swap.preswap({
+      pool: pool,
+      currentSqrtPrice: pool.current_sqrt_price,
+      decimalsA: decimals_a, // coin a 's decimals
+      decimalsB: decimals_b, // coin b 's decimals
+      a2b,
+      byAmountIn: by_amount_in, // fix token a amount
+      amount: coinAmount.toString(),
+      coinTypeA: pool.coinTypeA,
+      coinTypeB: pool.coinTypeB,
+    });
+
+    console.log('preSwapEstimation', preSwapEstimation);
+
+    const toAmount = by_amount_in
+      ? preSwapEstimation.estimatedAmountOut
+      : preSwapEstimation.estimatedAmountIn;
+
+    console.log('coinAmount', coinAmount.toString());
+    console.log('toAmount', toAmount.toString());
+
+    const amountLimit = adjustForCoinSlippage(
+      { coinA: new BN(a2b ? coinAmount : toAmount), coinB: new BN(a2b ? toAmount : coinAmount) },
+      slippage,
+      false
+    );
+    console.log('amountLimit object', amountLimit);
+
+    const amount_limit = a2b ? amountLimit.tokenMaxB : amountLimit.tokenMaxA;
+    console.log('amount_limit', amount_limit.toString());
+
+    // build swap Payload
+    const swapPayload = await this.client.Swap.createSwapTransactionPayload({
+      pool_id: pool.poolAddress,
+      coinTypeA: pool.coinTypeA,
+      coinTypeB: pool.coinTypeB,
+      a2b: a2b,
+      by_amount_in: by_amount_in,
+      amount: preSwapEstimation.amount.toString(),
+      amount_limit: amount_limit.toString(),
+    });
+
+    console.log('swapPayload', swapPayload);
+
+    console.log('Sending transaction...');
+    const swapTxn = await this.client.fullClient.sendTransaction(this.sender, swapPayload);
+
+    console.log('Transaction response:', swapTxn);
   }
 }

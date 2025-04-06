@@ -10,8 +10,9 @@ import CetusClmmSDK, {
 import { BN } from 'bn.js';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { DexExecutor } from './interface';
 
-export class Cetus {
+export class Cetus implements DexExecutor {
   private client: CetusClmmSDK;
   private sender: Ed25519Keypair;
   private suiClient: SuiClient;
@@ -28,9 +29,9 @@ export class Cetus {
     poolId: string,
     amount_a: number,
     amount_b: number,
-    fixed_amount_a: boolean,
     decimals_a: number,
-    decimals_b: number
+    decimals_b: number,
+    fixed_amount_a: boolean
   ): Promise<void> {
     console.log(`Adding liquidity to pool ${poolId} with amounts ${amount_a} and ${amount_b}`);
     // Implement the logic to add liquidity here

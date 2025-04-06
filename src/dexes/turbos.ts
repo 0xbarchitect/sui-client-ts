@@ -76,45 +76,11 @@ export class Turbos implements DexExecutor {
       amountA: a2b ? computeSwapResult[0].amount_a : computeSwapResult[0].amount_b,
       amountB: a2b ? computeSwapResult[0].amount_b : computeSwapResult[0].amount_a,
       amountSpecifiedIsInput: by_amount_in,
-      slippage: '10',
+      slippage: '10', // percentage
     };
 
     const swapPayload = await this.sdk.trade.swap(options);
     console.log('Transaction payload:', swapPayload);
-
-    // todo
-    // const { coinTypeA, coinTypeB, address, amountSpecifiedIsInput, slippage } = options;
-    // const amountA = new Decimal(options.amountA);
-    // const amountB = new Decimal(options.amountB);
-    // const routes = await Promise.all(
-    //   options.routes.map(async (item) => {
-    //     const typeArguments = await this.sdk.pool.getPoolTypeArguments(item.pool);
-    //     const [coinA, coinB] = await Promise.all([
-    //       this.sdk.coin.getMetadata(typeArguments[0]),
-    //       this.sdk.coin.getMetadata(typeArguments[1]),
-    //     ]);
-    //     return {
-    //       ...item,
-    //       coinA,
-    //       coinB,
-    //       typeArguments: typeArguments,
-    //     };
-    //   })
-    // );
-    // const coinIds = await this.sdk.coin.selectTradeCoins(address, coinTypeA, amountA);
-
-    // console.log('routes', routes);
-
-    // const { functionName, typeArguments } = this.getFunctionNameAndTypeArguments(
-    //   routes.map(({ typeArguments }) => typeArguments),
-    //   coinTypeA,
-    //   coinTypeB
-    // );
-
-    // console.log('functionName', functionName);
-    // console.log('typeArguments', typeArguments);
-
-    // return;
 
     console.log('sending transaction...');
     const tx = await this.suiClient.signAndExecuteTransaction({

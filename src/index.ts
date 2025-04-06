@@ -2,6 +2,7 @@ import { Cetus } from './dexes/cetus';
 import { createKeypairFromSuiPrivateKey } from './utils';
 import * as dotenv from 'dotenv';
 import { CLICommand } from './commands';
+import { Turbos } from './dexes/turbos';
 
 async function main() {
   dotenv.config();
@@ -10,6 +11,7 @@ async function main() {
     console.log('Public address', sender.getPublicKey().toSuiAddress());
 
     const cetus = new Cetus(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
+    const turbos = new Turbos(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
 
     //const pool_id = '0xb8d7d9e66a60c239e7a60110efcf8de6c705580ed924d0dde141f4a0e2c90105';
     //await cetus.add_liquidity(poolId, 1000_000, 0, true, 6, 9);
@@ -56,6 +58,9 @@ async function main() {
       switch (exchange) {
         case 'cetus':
           await cetus.swap(pool_id, amount_a, amount_b, decimals_a, decimals_b, a2b, by_amount_in);
+          break;
+        case 'turbos':
+          await turbos.swap(pool_id, amount_a, amount_b, decimals_a, decimals_b, a2b, by_amount_in);
           break;
         default:
           throw new Error(`Exchange ${exchange} not supported`);

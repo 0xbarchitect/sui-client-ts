@@ -22,7 +22,9 @@
   "dependencies": {
     "@cetusprotocol/cetus-sui-clmm-sdk": "^5.3.4",
     "@mysten/sui": "^1.26.1",
+    "commander": "^13.1.0",
     "dotenv": "^16.4.7",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "turbos-clmm-sdk": "^3.3.0"
   }
 }

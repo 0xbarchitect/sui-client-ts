@@ -10,8 +10,9 @@ import CetusClmmSDK, {
 import { BN } from 'bn.js';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { DexExecutor } from './interface';
 
-export class Cetus {
+export class Cetus implements DexExecutor {
   private client: CetusClmmSDK;
   private sender: Ed25519Keypair;
   private suiClient: SuiClient;
@@ -28,9 +29,9 @@ export class Cetus {
     poolId: string,
     amount_a: number,
     amount_b: number,
-    fixed_amount_a: boolean,
     decimals_a: number,
-    decimals_b: number
+    decimals_b: number,
+    fix_amount_a: boolean
   ): Promise<void> {
     console.log(`Adding liquidity to pool ${poolId} with amounts ${amount_a} and ${amount_b}`);
     // Implement the logic to add liquidity here
@@ -50,8 +51,8 @@ export class Cetus {
 
     const curSqrtPrice = new BN(pool.current_sqrt_price);
 
-    const coinAmount = new BN(fixed_amount_a ? amount_a : amount_b);
-    const iscoinA = fixed_amount_a;
+    const coinAmount = new BN(fix_amount_a ? amount_a : amount_b);
+    const iscoinA = fix_amount_a;
     const slippage = 0.01;
 
     const liquidityInput = ClmmPoolUtil.estLiquidityAndcoinAmountFromOneAmounts(
@@ -66,10 +67,10 @@ export class Cetus {
 
     console.log('Liquidity input:', liquidityInput);
 
-    const input_amount_a = fixed_amount_a
+    const input_amount_a = fix_amount_a
       ? coinAmount.toNumber()
       : liquidityInput.tokenMaxA.toNumber();
-    const input_amount_b = fixed_amount_a
+    const input_amount_b = fix_amount_a
       ? liquidityInput.tokenMaxB.toNumber()
       : coinAmount.toNumber();
 
@@ -81,7 +82,7 @@ export class Cetus {
       pool_id: pool.poolAddress,
       tick_lower: lowerTick.toString(),
       tick_upper: upperTick.toString(),
-      fix_amount_a: fixed_amount_a,
+      fix_amount_a,
       amount_a: input_amount_a,
       amount_b: input_amount_b,
       slippage,

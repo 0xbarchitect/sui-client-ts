@@ -42,11 +42,24 @@ type CreatePoolHandler = (
 
 export class CLICommand {
   program: Command;
-  private swapHandler: SwapHandler;
 
-  constructor(swapHandler: SwapHandler) {
+  private swapHandler: SwapHandler;
+  private addLiquidityHandler: AddLiquidityHandler;
+  private removeLiquidityHandler: RemoveLiquidityHandler;
+  private createPoolHandler: CreatePoolHandler;
+
+  constructor(
+    swapHandler: SwapHandler,
+    addLiquidityHandler: AddLiquidityHandler,
+    removeLiquidityHandler: RemoveLiquidityHandler,
+    createPoolHandler: CreatePoolHandler
+  ) {
     this.program = new Command();
+
     this.swapHandler = swapHandler;
+    this.addLiquidityHandler = addLiquidityHandler;
+    this.removeLiquidityHandler = removeLiquidityHandler;
+    this.createPoolHandler = createPoolHandler;
 
     this.program = this.program.version('1.0.0').description('DeFi CLI for SUI blockchain');
 
@@ -65,8 +78,8 @@ export class CLICommand {
       .option('--amount-b <amount>', 'Amount of second token', parseFloat)
       .option('--decimals-a <decimals>', 'Decimals of first token', '9')
       .option('--decimals-b <decimals>', 'Decimals of second token', '9')
-      .option('--a2b', 'Swap from token A to token B', true)
-      .option('--by-amount-in', 'Swap by amount in', true)
+      .option('--a2b', 'Swap from token A to token B')
+      .option('--by-amount-in', 'Swap by amount in')
       .action(async (options) => {
         console.log('CLI swap with options:', options);
         // Implement swap logic
@@ -77,41 +90,71 @@ export class CLICommand {
           options.amountB,
           options.decimalsA,
           options.decimalsB,
-          options.a2b,
-          options.byAmountIn
+          options.a2b ? options.a2b : false,
+          options.byAmountIn ? options.byAmountIn : false
         );
       });
 
     dexCommand
       .command('add-liquidity')
       .description('Add liquidity to a pool')
-      .option('--token1 <token>', 'First token')
-      .option('--token2 <token>', 'Second token')
-      .option('--amount1 <amount>', 'Amount of first token')
-      .option('--amount2 <amount>', 'Amount of second token')
-      .action((options) => {
+      .option('--exchange <exchange>', 'Exchange name')
+      .option('--pool-id <address>', 'Pool address')
+      .option('--amount-a <amount>', 'Amount of first token')
+      .option('--amount-b <amount>', 'Amount of second token')
+      .option('--decimals-a <decimals>', 'Decimals of first token', '9')
+      .option('--decimals-b <decimals>', 'Decimals of second token', '9')
+      .option('--fix-amount-a', 'Fix amount of first token')
+      .action(async (options) => {
         console.log('Adding liquidity with options:', options);
         // Implement add liquidity logic
+        await this.addLiquidityHandler(
+          options.exchange,
+          options.poolId,
+          options.amountA,
+          options.amountB,
+          options.decimalsA,
+          options.decimalsB,
+          options.fixAmountA ? options.fixAmountA : false
+        );
       });
 
     dexCommand
       .command('remove-liquidity')
       .description('Remove liquidity from a pool')
-      .option('-p, --pool <address>', 'Pool address')
-      .option('-a, --amount <amount>', 'LP token amount to remove')
-      .action((options) => {
+      .option('--exchange <exchange>', 'Exchange name')
+      .option('--pool-id <address>', 'Pool ID')
+      .option('--position-id <address>', 'Position ID')
+      .action(async (options) => {
         console.log('Removing liquidity with options:', options);
         // Implement remove liquidity logic
+        await this.removeLiquidityHandler(options.exchange, options.poolId, options.positionId);
       });
 
     dexCommand
       .command('create-pool')
       .description('Create a new liquidity pool')
-      .option('--token1 <token>', 'First token')
-      .option('--token2 <token>', 'Second token')
-      .action((options) => {
+      .option('--exchange <exchange>', 'Exchange name')
+      .option('--coin-type-a <type>', 'Coin type of first token')
+      .option('--coin-type-b <type>', 'Coin type of second token')
+      .option('--decimals-a <decimals>', 'Decimals of first token', '9')
+      .option('--decimals-b <decimals>', 'Decimals of second token', '9')
+      .option('--amount-a <amount>', 'Amount of first token')
+      .option('--amount-b <amount>', 'Amount of second token')
+      .option('--fix-amount-a', 'Fix amount of first token')
+      .action(async (options) => {
         console.log('Creating pool with options:', options);
         // Implement create pool logic
+        await this.createPoolHandler(
+          options.exchange,
+          options.coinTypeA,
+          options.coinTypeB,
+          options.decimalsA,
+          options.decimalsB,
+          options.amountA,
+          options.amountB,
+          options.fixAmountA
+        );
       });
 
     // Lending Command Group

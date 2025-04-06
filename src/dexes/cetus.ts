@@ -31,7 +31,7 @@ export class Cetus implements DexExecutor {
     amount_b: number,
     decimals_a: number,
     decimals_b: number,
-    fixed_amount_a: boolean
+    fix_amount_a: boolean
   ): Promise<void> {
     console.log(`Adding liquidity to pool ${poolId} with amounts ${amount_a} and ${amount_b}`);
     // Implement the logic to add liquidity here
@@ -51,8 +51,8 @@ export class Cetus implements DexExecutor {
 
     const curSqrtPrice = new BN(pool.current_sqrt_price);
 
-    const coinAmount = new BN(fixed_amount_a ? amount_a : amount_b);
-    const iscoinA = fixed_amount_a;
+    const coinAmount = new BN(fix_amount_a ? amount_a : amount_b);
+    const iscoinA = fix_amount_a;
     const slippage = 0.01;
 
     const liquidityInput = ClmmPoolUtil.estLiquidityAndcoinAmountFromOneAmounts(
@@ -67,10 +67,10 @@ export class Cetus implements DexExecutor {
 
     console.log('Liquidity input:', liquidityInput);
 
-    const input_amount_a = fixed_amount_a
+    const input_amount_a = fix_amount_a
       ? coinAmount.toNumber()
       : liquidityInput.tokenMaxA.toNumber();
-    const input_amount_b = fixed_amount_a
+    const input_amount_b = fix_amount_a
       ? liquidityInput.tokenMaxB.toNumber()
       : coinAmount.toNumber();
 
@@ -82,7 +82,7 @@ export class Cetus implements DexExecutor {
       pool_id: pool.poolAddress,
       tick_lower: lowerTick.toString(),
       tick_upper: upperTick.toString(),
-      fix_amount_a: fixed_amount_a,
+      fix_amount_a,
       amount_a: input_amount_a,
       amount_b: input_amount_b,
       slippage,

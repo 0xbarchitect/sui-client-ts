@@ -62,7 +62,106 @@ async function main() {
       }
     };
 
-    const cli = new CLICommand(handle_swap);
+    const handle_add_liquidity = async (
+      exchange: string,
+      pool_id: string,
+      amount_a: number,
+      amount_b: number,
+      decimals_a: number,
+      decimals_b: number,
+      fix_amount_a: boolean
+    ) => {
+      console.log('Handle add liquidity with options:', {
+        exchange,
+        pool_id,
+        amount_a,
+        amount_b,
+        decimals_a,
+        decimals_b,
+        fix_amount_a,
+      });
+
+      switch (exchange) {
+        case 'cetus':
+          await cetus.add_liquidity(
+            pool_id,
+            amount_a,
+            amount_b,
+            decimals_a,
+            decimals_b,
+            fix_amount_a
+          );
+          break;
+        default:
+          throw new Error(`Exchange ${exchange} not supported`);
+      }
+    };
+
+    const handle_remove_liquidity = async (
+      exchange: string,
+      pool_id: string,
+      position_id: string
+    ) => {
+      console.log('Handle remove liquidity with options:', {
+        exchange,
+        pool_id,
+        position_id,
+      });
+
+      switch (exchange) {
+        case 'cetus':
+          await cetus.remove_liquidity(pool_id, position_id);
+          break;
+        default:
+          throw new Error(`Exchange ${exchange} not supported`);
+      }
+    };
+
+    const handle_create_pool = async (
+      exchange: string,
+      coin_type_a: string,
+      coin_type_b: string,
+      decimals_a: number,
+      decimals_b: number,
+      amount_a: number,
+      amount_b: number,
+      fix_amount_a: boolean
+    ) => {
+      console.log('Handle create pool with options:', {
+        exchange,
+        coin_type_a,
+        coin_type_b,
+        decimals_a,
+        decimals_b,
+        amount_a,
+        amount_b,
+        fix_amount_a,
+      });
+
+      switch (exchange) {
+        case 'cetus':
+          await cetus.create_pool(
+            coin_type_a,
+            coin_type_b,
+            decimals_a,
+            decimals_b,
+            amount_a,
+            amount_b,
+            fix_amount_a
+          );
+          break;
+        default:
+          throw new Error(`Exchange ${exchange} not supported`);
+      }
+    };
+
+    const cli = new CLICommand(
+      handle_swap,
+      handle_add_liquidity,
+      handle_remove_liquidity,
+      handle_create_pool
+    );
+
     cli.program.parse(process.argv);
   } catch (error) {
     throw new Error(`Error in main function: ${error}`);

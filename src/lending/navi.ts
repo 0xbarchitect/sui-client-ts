@@ -4,6 +4,7 @@ import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { LendingExecutor } from './interface';
 import {
   Sui,
+  wUSDC,
   USDT,
   WETH,
   vSui,
@@ -12,7 +13,6 @@ import {
   NAVX,
   WBTC,
   AUSD,
-  wUSDC,
   nUSDC,
   ETH,
   USDY,
@@ -71,6 +71,58 @@ export class Navi implements LendingExecutor {
     console.log('amount', amount);
 
     const tx = await this.sdk.accounts[0].withdraw(Sui, amount);
+    console.log('tx', tx);
+  }
+
+  async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
+    console.log('Navi Borrow function called with parameters:', {
+      coin_type,
+      amount,
+    });
+
+    const coin = await this.sdk.accounts[0].getCoins(coin_type);
+    console.log('coin', coin);
+
+    console.log('address', Sui.address);
+
+    const health_factor = await this.sdk.accounts[0].getHealthFactor(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('health_factor', health_factor);
+
+    const portfolio = await this.sdk.accounts[0].getNAVIPortfolio(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('portfolio', portfolio);
+
+    amount = new BigNumber(amount).toNumber();
+    console.log('amount', amount);
+
+    const tx = await this.sdk.accounts[0].borrow(USDT, amount);
+    console.log('tx', tx);
+  }
+
+  async repay(coin_type: string, decimals: number, amount: number): Promise<void> {
+    console.log('Navi Repay function called with parameters:', {
+      coin_type,
+      amount,
+    });
+
+    amount = new BigNumber(amount).toNumber();
+    console.log('amount', amount);
+
+    const health_factor = await this.sdk.accounts[0].getHealthFactor(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('health_factor', health_factor);
+
+    const portfolio = await this.sdk.accounts[0].getNAVIPortfolio(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('portfolio', portfolio);
+
+    console.log('sending transaction...');
+    const tx = await this.sdk.accounts[0].repay(USDT, amount);
     console.log('tx', tx);
   }
 }

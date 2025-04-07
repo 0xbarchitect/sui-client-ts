@@ -197,13 +197,59 @@ async function main() {
       }
     };
 
+    const handle_borrow = async (
+      protocol: string,
+      coin_type: string,
+      decimals: number,
+      amount: number
+    ) => {
+      console.log('Handle borrow with options:', {
+        protocol,
+        coin_type,
+        decimals,
+        amount,
+      });
+
+      switch (protocol) {
+        case 'navi':
+          await navi.borrow(coin_type, decimals, amount);
+          break;
+        default:
+          throw new Error(`Protocol ${protocol} not supported`);
+      }
+    };
+
+    const handle_repay = async (
+      protocol: string,
+      coin_type: string,
+      decimals: number,
+      amount: number
+    ) => {
+      console.log('Handle repay with options:', {
+        protocol,
+        coin_type,
+        decimals,
+        amount,
+      });
+
+      switch (protocol) {
+        case 'navi':
+          await navi.repay(coin_type, decimals, amount);
+          break;
+        default:
+          throw new Error(`Protocol ${protocol} not supported`);
+      }
+    };
+
     const cli = new CLICommand(
       handle_swap,
       handle_add_liquidity,
       handle_remove_liquidity,
       handle_create_pool,
       handle_deposit,
-      handle_withdraw
+      handle_withdraw,
+      handle_borrow,
+      handle_repay
     );
 
     cli.program.parse(process.argv);

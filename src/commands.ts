@@ -54,6 +54,20 @@ type WithdrawHandler = (
   amount: number
 ) => Promise<void>;
 
+type BorrowHandler = (
+  protocol: string,
+  coin_type: string,
+  decimals: number,
+  amount: number
+) => Promise<void>;
+
+type RepayHandler = (
+  protocol: string,
+  coin_type: string,
+  decimals: number,
+  amount: number
+) => Promise<void>;
+
 export class CLICommand {
   program: Command;
 
@@ -64,6 +78,8 @@ export class CLICommand {
 
   private depositHandler: DepositHandler;
   private withdrawHandler: WithdrawHandler;
+  private borrowHandler: BorrowHandler;
+  private repayHandler: RepayHandler;
 
   constructor(
     swapHandler: SwapHandler,
@@ -71,7 +87,9 @@ export class CLICommand {
     removeLiquidityHandler: RemoveLiquidityHandler,
     createPoolHandler: CreatePoolHandler,
     depositHandler: DepositHandler,
-    withdrawHandler: WithdrawHandler
+    withdrawHandler: WithdrawHandler,
+    borrowHandler: BorrowHandler,
+    repayHandler: RepayHandler
   ) {
     this.program = new Command();
 
@@ -82,6 +100,8 @@ export class CLICommand {
 
     this.depositHandler = depositHandler;
     this.withdrawHandler = withdrawHandler;
+    this.borrowHandler = borrowHandler;
+    this.repayHandler = repayHandler;
 
     this.program = this.program.version('1.0.0').description('DeFi CLI for SUI blockchain');
 
@@ -223,21 +243,37 @@ export class CLICommand {
     lendingCommand
       .command('borrow')
       .description('Borrow assets')
-      .option('-t, --token <token>', 'Token to borrow')
-      .option('-a, --amount <amount>', 'Amount to borrow')
-      .action((options) => {
+      .option('--protocol <protocol>', 'Protocol name')
+      .option('--coin-type <coin type>', 'Coin type to borrow')
+      .option('--decimals <decimals>', 'Coin decimals')
+      .option('--amount <amount>', 'Amount to borrow')
+      .action(async (options) => {
         console.log('Borrowing with options:', options);
         // Implement borrow logic
+        await this.borrowHandler(
+          options.protocol,
+          options.coinType,
+          options.decimals,
+          options.amount
+        );
       });
 
     lendingCommand
       .command('repay')
       .description('Repay borrowed assets')
-      .option('-t, --token <token>', 'Token to repay')
-      .option('-a, --amount <amount>', 'Amount to repay')
-      .action((options) => {
+      .option('--protocol <protocol>', 'Protocol name')
+      .option('--coin-type <coin type>', 'Coin type to repay')
+      .option('--decimals <decimals>', 'Coin decimals')
+      .option('--amount <amount>', 'Amount to repay')
+      .action(async (options) => {
         console.log('Repaying with options:', options);
         // Implement repay logic
+        await this.repayHandler(
+          options.protocol,
+          options.coinType,
+          options.decimals,
+          options.amount
+        );
       });
 
     lendingCommand

@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import { CLICommand } from './commands';
 import { Turbos } from './dexes/turbos';
 import { Bluefin } from './dexes/bluefin';
+import { Navi } from './lending/navi';
 
 async function main() {
   dotenv.config();
@@ -15,26 +16,7 @@ async function main() {
     const turbos = new Turbos(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
     const bluefin = new Bluefin(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
 
-    //const pool_id = '0xb8d7d9e66a60c239e7a60110efcf8de6c705580ed924d0dde141f4a0e2c90105';
-    //await cetus.add_liquidity(poolId, 1000_000, 0, true, 6, 9);
-
-    //const position_id = '0xada3bb71c42021b679a4729cc8a6f683cb3dfa0e0fb9ea84094b1c55e5372f68';
-    //await cetus.remove_liquidity(poolId, positionId);
-
-    // const coin_type_a =
-    //   '0xc7cebc639a77ae2a9917b63a23e34feb454fecb7fc9682864c2bedf7220091fd::my_coin::MY_COIN';
-    // const coin_type_b = '0x2::sui::SUI';
-
-    //await cetus.create_pool(coin_type_a, coin_type_b, 6, 6, 2000_000_000, 100_000_000, true);
-
-    // const amount_a = 1_000_000;
-    // const amount_b = 0;
-    // const decimals_a = 6;
-    // const decimals_b = 9;
-    // const a2b = true;
-    // const by_amount_in = true;
-
-    // await cetus.swap(pool_id, amount_a, amount_b, decimals_a, decimals_b, a2b, by_amount_in);
+    const navi = new Navi(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
 
     const handle_swap = async (
       exchange: string,
@@ -173,11 +155,55 @@ async function main() {
       }
     };
 
+    const handle_deposit = async (
+      protocol: string,
+      coin_type: string,
+      decimals: number,
+      amount: number
+    ) => {
+      console.log('Handle deposit with options:', {
+        protocol,
+        coin_type,
+        decimals,
+        amount,
+      });
+      switch (protocol) {
+        case 'navi':
+          await navi.deposit(coin_type, decimals, amount);
+          break;
+        default:
+          throw new Error(`Protocol ${protocol} not supported`);
+      }
+    };
+
+    const handle_withdraw = async (
+      protocol: string,
+      coin_type: string,
+      decimals: number,
+      amount: number
+    ) => {
+      console.log('Handle withdraw with options:', {
+        protocol,
+        coin_type,
+        decimals,
+        amount,
+      });
+      switch (protocol) {
+        case 'navi':
+          await navi.withdraw(coin_type, decimals, amount);
+          break;
+        default:
+          throw new Error(`Protocol ${protocol} not supported`);
+      }
+    };
+
     const cli = new CLICommand(
       handle_swap,
       handle_add_liquidity,
       handle_remove_liquidity,
-      handle_create_pool
+      handle_create_pool,
+      handle_deposit,
+      handle_withdraw
     );
 
     cli.program.parse(process.argv);

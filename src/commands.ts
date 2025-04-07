@@ -40,6 +40,20 @@ type CreatePoolHandler = (
   fix_amount_a: boolean
 ) => Promise<void>;
 
+type DepositHandler = (
+  protocol: string,
+  coin_type: string,
+  decimals: number,
+  amount: number
+) => Promise<void>;
+
+type WithdrawHandler = (
+  protocol: string,
+  coin_type: string,
+  decimals: number,
+  amount: number
+) => Promise<void>;
+
 export class CLICommand {
   program: Command;
 
@@ -48,11 +62,16 @@ export class CLICommand {
   private removeLiquidityHandler: RemoveLiquidityHandler;
   private createPoolHandler: CreatePoolHandler;
 
+  private depositHandler: DepositHandler;
+  private withdrawHandler: WithdrawHandler;
+
   constructor(
     swapHandler: SwapHandler,
     addLiquidityHandler: AddLiquidityHandler,
     removeLiquidityHandler: RemoveLiquidityHandler,
-    createPoolHandler: CreatePoolHandler
+    createPoolHandler: CreatePoolHandler,
+    depositHandler: DepositHandler,
+    withdrawHandler: WithdrawHandler
   ) {
     this.program = new Command();
 
@@ -60,6 +79,9 @@ export class CLICommand {
     this.addLiquidityHandler = addLiquidityHandler;
     this.removeLiquidityHandler = removeLiquidityHandler;
     this.createPoolHandler = createPoolHandler;
+
+    this.depositHandler = depositHandler;
+    this.withdrawHandler = withdrawHandler;
 
     this.program = this.program.version('1.0.0').description('DeFi CLI for SUI blockchain');
 
@@ -165,21 +187,37 @@ export class CLICommand {
     lendingCommand
       .command('deposit')
       .description('Deposit assets')
-      .option('-t, --token <token>', 'Token to deposit')
-      .option('-a, --amount <amount>', 'Amount to deposit')
-      .action((options) => {
+      .option('--protocol <protocol>', 'Protocol name')
+      .option('--coin-type <coin type>', 'Coin type to deposit')
+      .option('--decimals <decimals>', 'Coin decimals')
+      .option('--amount <amount>', 'Amount to deposit')
+      .action(async (options) => {
         console.log('Depositing with options:', options);
         // Implement deposit logic
+        await this.depositHandler(
+          options.protocol,
+          options.coinType,
+          options.decimals,
+          options.amount
+        );
       });
 
     lendingCommand
       .command('withdraw')
       .description('Withdraw assets')
-      .option('-t, --token <token>', 'Token to withdraw')
-      .option('-a, --amount <amount>', 'Amount to withdraw')
-      .action((options) => {
+      .option('--protocol <protocol>', 'Protocol name')
+      .option('--coin-type <coin type>', 'Coin type to withdraw')
+      .option('--decimals <decimals>', 'Coin decimals')
+      .option('--amount <amount>', 'Amount to withdraw')
+      .action(async (options) => {
         console.log('Withdrawing with options:', options);
         // Implement withdraw logic
+        await this.withdrawHandler(
+          options.protocol,
+          options.coinType,
+          options.decimals,
+          options.amount
+        );
       });
 
     lendingCommand

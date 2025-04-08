@@ -1,4 +1,4 @@
-import { Scallop, ScallopClient } from '@scallop-io/sui-scallop-sdk';
+import { Scallop, ScallopClient, ScallopQuery } from '@scallop-io/sui-scallop-sdk';
 import { LendingExecutor } from './interface';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
@@ -8,7 +8,9 @@ export class ScallopExecutor implements LendingExecutor {
   private sdk: Scallop;
   private sender: Ed25519Keypair;
   private suiClient: SuiClient;
-  private client: ScallopClient;
+
+  private client?: ScallopClient;
+  private query?: ScallopQuery;
 
   constructor(network: 'mainnet' | 'testnet', sender: Ed25519Keypair) {
     this.sender = sender;
@@ -19,8 +21,6 @@ export class ScallopExecutor implements LendingExecutor {
       networkType: network,
       addressId: '67c44a103fe1b8c454eb9699',
     });
-
-    this.client = undefined as unknown as ScallopClient;
   }
 
   async init(): Promise<void> {
@@ -28,6 +28,8 @@ export class ScallopExecutor implements LendingExecutor {
 
     this.client = await this.sdk.createScallopClient();
     console.info('Scallop Your wallet:', this.client.walletAddress);
+
+    this.query = await this.sdk.createScallopQuery();
   }
 
   async deposit(coin_type: string, decimals: number, amount: number): Promise<void> {
@@ -37,11 +39,11 @@ export class ScallopExecutor implements LendingExecutor {
     });
     amount = new BigNumber(amount).toNumber();
 
-    const obligations = await this.client.getObligations();
+    const obligations = await this.client!.getObligations();
     console.log('Obligations:', obligations);
 
     console.log('depositing...');
-    const depositResult = await this.client.deposit(coin_type, amount);
+    const depositResult = await this.client!.deposit(coin_type, amount);
     console.log('Deposit result:', depositResult);
   }
 
@@ -52,12 +54,15 @@ export class ScallopExecutor implements LendingExecutor {
     });
     amount = new BigNumber(amount).toNumber();
 
-    const obligations = await this.client.getObligations();
+    const obligations = await this.query!.getObligations();
     console.log('Obligations:', obligations);
 
-    console.log('withdrawing...');
-    const withdrawResult = await this.client.withdraw(coin_type, amount);
-    console.log('Withdraw result:', withdrawResult);
+    const obligationData = await this.query!.queryObligation(obligations[0].id);
+    console.log('Obligation data:', obligationData);
+
+    //console.log('withdrawing...');
+    //const withdrawResult = await this.client!.withdraw(coin_type, amount);
+    //console.log('Withdraw result:', withdrawResult);
   }
 
   async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
@@ -67,11 +72,11 @@ export class ScallopExecutor implements LendingExecutor {
     });
     amount = new BigNumber(amount).toNumber();
 
-    const obligations = await this.client.getObligations();
+    const obligations = await this.client!.getObligations();
     console.log('Obligations:', obligations);
 
     console.log('borrowing...');
-    const borrowResult = await this.client.borrow(
+    const borrowResult = await this.client!.borrow(
       coin_type,
       amount,
       true,

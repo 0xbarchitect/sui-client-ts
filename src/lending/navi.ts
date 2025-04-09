@@ -70,6 +70,18 @@ export class Navi implements LendingExecutor {
     amount = new BigNumber(amount).toNumber();
     console.log('amount', amount);
 
+    console.log('sui coin', Sui);
+
+    const health_factor = await this.sdk.accounts[0].getHealthFactor(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('health_factor', health_factor);
+
+    const portfolio = await this.sdk.accounts[0].getNAVIPortfolio(
+      this.sender.getPublicKey().toSuiAddress()
+    );
+    console.log('portfolio', portfolio);
+
     const tx = await this.sdk.accounts[0].withdraw(Sui, amount);
     console.log('tx', tx);
   }

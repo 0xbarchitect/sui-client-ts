@@ -5,6 +5,7 @@ import { CLICommand } from './commands';
 import { Turbos } from './dexes/turbos';
 import { Bluefin } from './dexes/bluefin';
 import { Navi } from './lending/navi';
+import { ScallopExecutor } from './lending/scallop';
 
 async function main() {
   dotenv.config();
@@ -17,6 +18,8 @@ async function main() {
     const bluefin = new Bluefin(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
 
     const navi = new Navi(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
+    const scallop = new ScallopExecutor(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
+    await scallop.init();
 
     const handle_swap = async (
       exchange: string,
@@ -159,17 +162,22 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      is_collateral: boolean
     ) => {
       console.log('Handle deposit with options:', {
         protocol,
         coin_type,
         decimals,
         amount,
+        is_collateral,
       });
       switch (protocol) {
         case 'navi':
           await navi.deposit(coin_type, decimals, amount);
+          break;
+        case 'scallop':
+          await scallop.deposit(coin_type, decimals, amount, is_collateral);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
@@ -180,17 +188,22 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      is_collateral: boolean
     ) => {
       console.log('Handle withdraw with options:', {
         protocol,
         coin_type,
         decimals,
         amount,
+        is_collateral,
       });
       switch (protocol) {
         case 'navi':
           await navi.withdraw(coin_type, decimals, amount);
+          break;
+        case 'scallop':
+          await scallop.withdraw(coin_type, decimals, amount, is_collateral);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
@@ -214,6 +227,9 @@ async function main() {
         case 'navi':
           await navi.borrow(coin_type, decimals, amount);
           break;
+        case 'scallop':
+          await scallop.borrow(coin_type, decimals, amount);
+          break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
       }
@@ -235,6 +251,9 @@ async function main() {
       switch (protocol) {
         case 'navi':
           await navi.repay(coin_type, decimals, amount);
+          break;
+        case 'scallop':
+          await scallop.repay(coin_type, decimals, amount);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);

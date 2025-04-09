@@ -44,14 +44,16 @@ type DepositHandler = (
   protocol: string,
   coin_type: string,
   decimals: number,
-  amount: number
+  amount: number,
+  isCollateral: boolean
 ) => Promise<void>;
 
 type WithdrawHandler = (
   protocol: string,
   coin_type: string,
   decimals: number,
-  amount: number
+  amount: number,
+  isCollateral: boolean
 ) => Promise<void>;
 
 type BorrowHandler = (
@@ -211,6 +213,7 @@ export class CLICommand {
       .option('--coin-type <coin type>', 'Coin type to deposit')
       .option('--decimals <decimals>', 'Coin decimals')
       .option('--amount <amount>', 'Amount to deposit')
+      .option('--is-collateral', 'Is collateral')
       .action(async (options) => {
         console.log('Depositing with options:', options);
         // Implement deposit logic
@@ -218,7 +221,8 @@ export class CLICommand {
           options.protocol,
           options.coinType,
           options.decimals,
-          options.amount
+          options.amount,
+          options.isCollateral
         );
       });
 
@@ -227,8 +231,9 @@ export class CLICommand {
       .description('Withdraw assets')
       .option('--protocol <protocol>', 'Protocol name')
       .option('--coin-type <coin type>', 'Coin type to withdraw')
-      .option('--decimals <decimals>', 'Coin decimals')
-      .option('--amount <amount>', 'Amount to withdraw')
+      .option('--decimals <decimals>', 'Coin decimals', parseInt)
+      .option('--amount <amount>', 'Amount to withdraw', parseFloat)
+      .option('--is-collateral', 'Is collateral', false)
       .action(async (options) => {
         console.log('Withdrawing with options:', options);
         // Implement withdraw logic
@@ -236,7 +241,8 @@ export class CLICommand {
           options.protocol,
           options.coinType,
           options.decimals,
-          options.amount
+          options.amount,
+          options.isCollateral
         );
       });
 

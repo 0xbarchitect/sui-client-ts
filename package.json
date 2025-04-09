@@ -22,7 +22,7 @@
   "dependencies": {
     "@cetusprotocol/cetus-sui-clmm-sdk": "^5.3.4",
     "@firefly-exchange/library-sui": "^2.6.7",
-    "@mysten/sui": "^1.26.1",
+    "@mysten/sui": "^1.20.0",
     "@scallop-io/sui-scallop-sdk": "^2.0.12",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",

@@ -6,6 +6,7 @@ import { Turbos } from './dexes/turbos';
 import { Bluefin } from './dexes/bluefin';
 import { Navi } from './lending/navi';
 import { ScallopExecutor } from './lending/scallop';
+import { Suilend } from './lending/suilend';
 
 async function main() {
   dotenv.config();
@@ -20,6 +21,9 @@ async function main() {
     const navi = new Navi(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
     const scallop = new ScallopExecutor(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
     await scallop.init();
+
+    const suilend = new Suilend(process.env.NETWORK! as 'mainnet' | 'testnet', sender);
+    await suilend.init();
 
     const handle_swap = async (
       exchange: string,

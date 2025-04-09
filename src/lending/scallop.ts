@@ -75,15 +75,18 @@ export class ScallopExecutor implements LendingExecutor {
     console.log('Scallop Withdraw function called with parameters:', {
       coin_type,
       amount,
+      decimals,
+      isCollateral,
     });
-    amount = new BigNumber(amount).toNumber();
+    amount = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toNumber();
+    console.log('Withdraw amount after conversion:', amount);
+
+    const lendings = await this.query!.getLendings([coin_type]);
+    console.log('Lendings data:', lendings);
 
     const obligations = await this.query!.getObligations();
     const obligationData = await this.query!.queryObligation(obligations[0].id);
     console.log('Obligation data:', obligationData);
-
-    //const marketData = await this.query!.queryMarket();
-    //console.log('Market data:', marketData);
 
     console.log('withdrawing...');
     if (isCollateral) {

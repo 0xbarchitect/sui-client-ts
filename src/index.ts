@@ -162,20 +162,22 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      is_collateral: boolean
     ) => {
       console.log('Handle deposit with options:', {
         protocol,
         coin_type,
         decimals,
         amount,
+        is_collateral,
       });
       switch (protocol) {
         case 'navi':
           await navi.deposit(coin_type, decimals, amount);
           break;
         case 'scallop':
-          await scallop.deposit(coin_type, decimals, amount);
+          await scallop.deposit(coin_type, decimals, amount, is_collateral);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
@@ -186,20 +188,22 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      is_collateral: boolean
     ) => {
       console.log('Handle withdraw with options:', {
         protocol,
         coin_type,
         decimals,
         amount,
+        is_collateral,
       });
       switch (protocol) {
         case 'navi':
           await navi.withdraw(coin_type, decimals, amount);
           break;
         case 'scallop':
-          await scallop.withdraw(coin_type, decimals, amount);
+          await scallop.withdraw(coin_type, decimals, amount, is_collateral);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);

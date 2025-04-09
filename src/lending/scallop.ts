@@ -27,53 +27,90 @@ export class ScallopExecutor implements LendingExecutor {
     console.log('Scallop SDK initialized');
 
     this.client = await this.sdk.createScallopClient();
-    console.info('Scallop Your wallet:', this.client.walletAddress);
-
     this.query = await this.sdk.createScallopQuery();
+
+    console.info('Your wallet:', this.client.walletAddress);
+    const obligations = await this.query!.getObligations();
+    const obligationData = await this.query!.queryObligation(obligations[0].id);
+    console.log('Obligation data:', obligationData);
   }
 
-  async deposit(coin_type: string, decimals: number, amount: number): Promise<void> {
-    console.log('Navi Deposit function called with parameters:', {
-      coin_type,
-      amount,
-    });
-    amount = new BigNumber(amount).toNumber();
-
-    const obligations = await this.client!.getObligations();
-    console.log('Obligations:', obligations);
-
-    console.log('depositing...');
-    const depositResult = await this.client!.deposit(coin_type, amount);
-    console.log('Deposit result:', depositResult);
-  }
-
-  async withdraw(coin_type: string, decimals: number, amount: number): Promise<void> {
-    console.log('Navi Withdraw function called with parameters:', {
+  async deposit(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    isCollateral?: boolean
+  ): Promise<void> {
+    console.log('Scallop Deposit function called with parameters:', {
       coin_type,
       amount,
     });
     amount = new BigNumber(amount).toNumber();
 
     const obligations = await this.query!.getObligations();
-    console.log('Obligations:', obligations);
-
     const obligationData = await this.query!.queryObligation(obligations[0].id);
     console.log('Obligation data:', obligationData);
 
-    //console.log('withdrawing...');
-    //const withdrawResult = await this.client!.withdraw(coin_type, amount);
-    //console.log('Withdraw result:', withdrawResult);
+    console.log('depositing...');
+    if (isCollateral) {
+      const depositResult = await this.client!.depositCollateral(
+        coin_type,
+        amount,
+        true,
+        obligations[0].id
+      );
+      console.log('DepositCollateral result:', depositResult);
+    } else {
+      const depositResult = await this.client!.deposit(coin_type, amount);
+      console.log('Deposit result:', depositResult);
+    }
   }
 
-  async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
-    console.log('Navi Borrow function called with parameters:', {
+  async withdraw(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    isCollateral?: boolean
+  ): Promise<void> {
+    console.log('Scallop Withdraw function called with parameters:', {
       coin_type,
       amount,
     });
     amount = new BigNumber(amount).toNumber();
 
-    const obligations = await this.client!.getObligations();
-    console.log('Obligations:', obligations);
+    const obligations = await this.query!.getObligations();
+    const obligationData = await this.query!.queryObligation(obligations[0].id);
+    console.log('Obligation data:', obligationData);
+
+    //const marketData = await this.query!.queryMarket();
+    //console.log('Market data:', marketData);
+
+    console.log('withdrawing...');
+    if (isCollateral) {
+      const withdrawResult = await this.client!.withdrawCollateral(
+        coin_type,
+        amount,
+        true,
+        obligations[0].id,
+        obligations[0].keyId
+      );
+      console.log('WithdrawCollateral result:', withdrawResult);
+    } else {
+      const withdrawResult = await this.client!.withdraw(coin_type, amount);
+      console.log('Withdraw result:', withdrawResult);
+    }
+  }
+
+  async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
+    console.log('Scallop Borrow function called with parameters:', {
+      coin_type,
+      amount,
+    });
+    amount = new BigNumber(amount).toNumber();
+
+    const obligations = await this.query!.getObligations();
+    const obligationData = await this.query!.queryObligation(obligations[0].id);
+    console.log('Obligation data:', obligationData);
 
     console.log('borrowing...');
     const borrowResult = await this.client!.borrow(
@@ -87,9 +124,23 @@ export class ScallopExecutor implements LendingExecutor {
   }
 
   async repay(coin_type: string, decimals: number, amount: number): Promise<void> {
-    console.log('Navi Repay function called with parameters:', {
+    console.log('Scallop Repay function called with parameters:', {
       coin_type,
       amount,
     });
+
+    const obligations = await this.query!.getObligations();
+    const obligationData = await this.query!.queryObligation(obligations[0].id);
+    console.log('Obligation data:', obligationData);
+
+    console.log('repaying...');
+    const repayResult = await this.client!.repay(
+      coin_type,
+      amount,
+      true,
+      obligations[0].id,
+      obligations[0].keyId
+    );
+    console.log('Repay result:', repayResult);
   }
 }

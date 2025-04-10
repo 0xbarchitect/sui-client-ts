@@ -8,6 +8,8 @@ import {
   initializeSuilend,
   sendObligationToUser,
 } from '@suilend/sdk';
+import { ObligationOwnerCap } from '@suilend/sdk/_generated/suilend/lending-market/structs';
+
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { LendingExecutor } from './interface';
@@ -18,6 +20,8 @@ export class Suilend implements LendingExecutor {
   private client?: SuilendClient;
   private sender: Ed25519Keypair;
   private suiClient: SuiClient;
+  private obligationOwnerCap?: ObligationOwnerCap<string>;
+  private obligation?: any;
 
   constructor(network: 'mainnet' | 'testnet', sender: Ed25519Keypair) {
     this.sender = sender;
@@ -26,29 +30,18 @@ export class Suilend implements LendingExecutor {
 
   async init(): Promise<void> {
     console.log('Suilend SDK initialized');
+
     this.client = await SuilendClient.initialize(
       LENDING_MARKET_ID,
       LENDING_MARKET_TYPE,
       this.suiClient
     );
 
-    console.log('Suilend client initialized:', this.client);
-  }
-
-  async deposit(coin_type: string, decimals: number, amount: number): Promise<void> {
-    console.log('Suilend Deposit function called with parameters:', {
-      coin_type,
-      amount,
-    });
-
-    const amountBN = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals));
-    console.log('Amount in base units:', amountBN.toString());
-
-    const suilendClient = await SuilendClient.initialize(
-      LENDING_MARKETS[0].id,
-      LENDING_MARKETS[0].type,
-      this.suiClient
-    );
+    // const suilendClient = await SuilendClient.initialize(
+    //   LENDING_MARKETS[0].id,
+    //   LENDING_MARKETS[0].type,
+    //   this.suiClient
+    // );
 
     const {
       lendingMarket,
@@ -62,7 +55,7 @@ export class Suilend implements LendingExecutor {
       rewardCoinTypes,
       activeRewardCoinTypes,
       rewardCoinMetadataMap,
-    } = await initializeSuilend(this.suiClient, suilendClient);
+    } = await initializeSuilend(this.suiClient, this.client!);
 
     //console.log('Lending Market:', lendingMarket);
 
@@ -76,6 +69,21 @@ export class Suilend implements LendingExecutor {
     console.log('ObligationOwnerCaps:', obligationOwnerCaps);
     console.log('Obligations:', obligations);
 
+    this.obligationOwnerCap = obligationOwnerCaps[0];
+    this.obligation = obligations[0];
+
+    console.log('Suilend client initialized:', this.client);
+  }
+
+  async deposit(coin_type: string, decimals: number, amount: number): Promise<void> {
+    console.log('Suilend Deposit function called with parameters:', {
+      coin_type,
+      amount,
+    });
+
+    const amountBN = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals));
+    console.log('Amount in base units:', amountBN.toString());
+
     // build tx payload
     const transaction = new Transaction();
 
@@ -83,7 +91,7 @@ export class Suilend implements LendingExecutor {
       const { obligationOwnerCapId, didCreate } = createObligationIfNoneExists(
         this.client!,
         transaction,
-        obligationOwnerCaps[0]
+        this.obligationOwnerCap!
       );
       console.log('Obligation Owner Cap ID:', obligationOwnerCapId, didCreate);
 
@@ -135,6 +143,40 @@ export class Suilend implements LendingExecutor {
       coin_type,
       amount,
     });
+    const amountBN = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals));
+    console.log('Amount in base units:', amountBN.toString());
+
+    const transaction = new Transaction();
+
+    try {
+      await this.client!.borrowAndSendToUser(
+        this.sender.getPublicKey().toSuiAddress(),
+        this.obligationOwnerCap!.id,
+        this.obligation!.id,
+        coin_type,
+        amountBN.toString(),
+        transaction
+      );
+    } catch (err) {
+      console.log('Error in borrowAndSendToUser:', err);
+      throw err;
+    }
+
+    console.log('Transaction payload:', transaction);
+
+    console.log('sending transaction...');
+    const tx = await this.suiClient.signAndExecuteTransaction({
+      signer: this.sender,
+      transaction,
+      options: {
+        showBalanceChanges: true,
+        showEffects: true,
+        showInput: true,
+        showEvents: true,
+        showObjectChanges: true,
+      },
+    });
+    console.log('Transaction result:', tx);
   }
 
   async repay(coin_type: string, decimals: number, amount: number): Promise<void> {

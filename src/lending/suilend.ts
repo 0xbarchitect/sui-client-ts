@@ -114,7 +114,7 @@ export class Suilend implements LendingExecutor {
       throw error;
     }
 
-    console.log('Deposit transaction payload:', transaction);
+    console.log('Transaction payload:', transaction);
 
     console.log('sending transaction...');
     const tx = await this.suiClient.signAndExecuteTransaction({
@@ -136,6 +136,40 @@ export class Suilend implements LendingExecutor {
       coin_type,
       amount,
     });
+    const amountBN = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals));
+    console.log('Amount in base units:', amountBN.toString());
+
+    const transaction = new Transaction();
+
+    try {
+      await this.client!.withdrawAndSendToUser(
+        this.sender.getPublicKey().toSuiAddress(),
+        this.obligationOwnerCap!.id,
+        this.obligation.id,
+        coin_type,
+        amountBN.toString(),
+        transaction
+      );
+    } catch (err) {
+      console.log('Error in withdrawAndSendToUser:', err);
+      throw err;
+    }
+
+    console.log('Transaction payload:', transaction);
+
+    console.log('sending transaction...');
+    const tx = await this.suiClient.signAndExecuteTransaction({
+      signer: this.sender,
+      transaction,
+      options: {
+        showBalanceChanges: true,
+        showEffects: true,
+        showInput: true,
+        showEvents: true,
+        showObjectChanges: true,
+      },
+    });
+    console.log('Transaction result:', tx);
   }
 
   async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
@@ -152,7 +186,7 @@ export class Suilend implements LendingExecutor {
       await this.client!.borrowAndSendToUser(
         this.sender.getPublicKey().toSuiAddress(),
         this.obligationOwnerCap!.id,
-        this.obligation!.id,
+        this.obligation.id,
         coin_type,
         amountBN.toString(),
         transaction

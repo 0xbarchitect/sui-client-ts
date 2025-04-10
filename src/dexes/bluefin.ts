@@ -1,8 +1,9 @@
 import { OnChainCalls, QueryChain, ISwapParams } from '@firefly-exchange/library-sui/dist/src/spot';
-import { Ed25519Keypair, toBigNumber, SuiClient, BigNumber } from '@firefly-exchange/library-sui';
+import { toBigNumber, SuiClient, BigNumber } from '@firefly-exchange/library-sui';
 import { mainnet } from './bluefin_config';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { DexExecutor } from './interface';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
 export class Bluefin implements DexExecutor {
   private sender: Ed25519Keypair;

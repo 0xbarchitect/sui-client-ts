@@ -183,6 +183,9 @@ async function main() {
         case 'scallop':
           await scallop.deposit(coin_type, decimals, amount, is_collateral);
           break;
+        case 'suilend':
+          await suilend.deposit(coin_type, decimals, amount);
+          break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
       }
@@ -209,6 +212,9 @@ async function main() {
         case 'scallop':
           await scallop.withdraw(coin_type, decimals, amount, is_collateral);
           break;
+        case 'suilend':
+          await suilend.withdraw(coin_type, decimals, amount);
+          break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
       }
@@ -234,6 +240,9 @@ async function main() {
         case 'scallop':
           await scallop.borrow(coin_type, decimals, amount);
           break;
+        case 'suilend':
+          await suilend.borrow(coin_type, decimals, amount);
+          break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);
       }
@@ -258,6 +267,9 @@ async function main() {
           break;
         case 'scallop':
           await scallop.repay(coin_type, decimals, amount);
+          break;
+        case 'suilend':
+          await suilend.repay(coin_type, decimals, amount);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);

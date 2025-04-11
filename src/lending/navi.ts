@@ -2,28 +2,7 @@ import { NAVISDKClient, CoinInfo } from 'navi-sdk';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { LendingExecutor } from './interface';
-import {
-  Sui,
-  wUSDC,
-  USDT,
-  WETH,
-  vSui,
-  haSui,
-  CETUS,
-  NAVX,
-  WBTC,
-  AUSD,
-  nUSDC,
-  ETH,
-  USDY,
-  NS,
-  LorenzoBTC,
-  DEEP,
-  FDUSD,
-  BLUE,
-  BUCK,
-  suiUSDT,
-} from 'navi-sdk';
+import { Sui, nUSDC, wUSDC, USDT, vSui, haSui } from 'navi-sdk';
 import { BigNumber } from '@firefly-exchange/library-sui';
 
 export class Navi implements LendingExecutor {
@@ -45,32 +24,50 @@ export class Navi implements LendingExecutor {
     this.suiClient = new SuiClient({ url: getFullnodeUrl(network) });
   }
 
-  async deposit(coin_type: string, decimals: number, amount: number): Promise<void> {
+  async deposit(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    is_collateral: boolean,
+    coin_symbol: string
+  ): Promise<void> {
     console.log('Navi Deposit function called with parameters:', {
       coin_type,
       amount,
+      decimals,
+      coin_symbol,
     });
 
-    const coin_info: CoinInfo = { symbol: 'SUI', address: coin_type, decimal: decimals };
-    amount = new BigNumber(amount).toNumber();
+    const coin_info: CoinInfo = { symbol: coin_symbol, address: coin_type, decimal: decimals };
 
-    console.log('amount', amount);
+    amount = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toNumber();
+    console.log('amount in mist', amount);
 
-    const tx = await this.sdk.accounts[0].depositToNavi(Sui, amount);
-    console.log('tx', tx);
+    console.log('sui coin', Sui);
+
+    console.log('sending transaction...');
+    const tx = await this.sdk.accounts[0].depositToNavi(coin_info, amount);
+    console.log('tx result', tx);
   }
 
-  async withdraw(coin_type: string, decimals: number, amount: number): Promise<void> {
+  async withdraw(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    is_collateral: boolean,
+    coin_symbol: string
+  ): Promise<void> {
     console.log('Navi Withdraw function called with parameters:', {
       coin_type,
       amount,
+      decimals,
+      coin_symbol,
     });
 
-    const coin_info: CoinInfo = { symbol: 'SUI', address: coin_type, decimal: decimals };
-    amount = new BigNumber(amount).toNumber();
-    console.log('amount', amount);
+    const coin_info: CoinInfo = { symbol: coin_symbol, address: coin_type, decimal: decimals };
 
-    console.log('sui coin', Sui);
+    amount = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toNumber();
+    console.log('amount in mist', amount);
 
     const health_factor = await this.sdk.accounts[0].getHealthFactor(
       this.sender.getPublicKey().toSuiAddress()
@@ -82,14 +79,22 @@ export class Navi implements LendingExecutor {
     );
     console.log('portfolio', portfolio);
 
-    const tx = await this.sdk.accounts[0].withdraw(Sui, amount);
-    console.log('tx', tx);
+    console.log('sending transaction...');
+    const tx = await this.sdk.accounts[0].withdraw(coin_info, amount);
+    console.log('tx result', tx);
   }
 
-  async borrow(coin_type: string, decimals: number, amount: number): Promise<void> {
+  async borrow(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    coin_symbol: string
+  ): Promise<void> {
     console.log('Navi Borrow function called with parameters:', {
       coin_type,
       amount,
+      decimals,
+      coin_symbol,
     });
 
     const coin = await this.sdk.accounts[0].getCoins(coin_type);
@@ -107,21 +112,33 @@ export class Navi implements LendingExecutor {
     );
     console.log('portfolio', portfolio);
 
-    amount = new BigNumber(amount).toNumber();
-    console.log('amount', amount);
+    amount = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toNumber();
+    console.log('amount in mist', amount);
 
-    const tx = await this.sdk.accounts[0].borrow(USDT, amount);
-    console.log('tx', tx);
+    console.log('usdc', nUSDC);
+
+    const coin_info: CoinInfo = { symbol: coin_symbol, address: coin_type, decimal: decimals };
+
+    console.log('sending transaction...');
+    const tx = await this.sdk.accounts[0].borrow(coin_info, amount);
+    console.log('tx result', tx);
   }
 
-  async repay(coin_type: string, decimals: number, amount: number): Promise<void> {
+  async repay(
+    coin_type: string,
+    decimals: number,
+    amount: number,
+    coin_symbol: string
+  ): Promise<void> {
     console.log('Navi Repay function called with parameters:', {
       coin_type,
       amount,
+      decimals,
+      coin_symbol,
     });
 
-    amount = new BigNumber(amount).toNumber();
-    console.log('amount', amount);
+    amount = new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toNumber();
+    console.log('amount in mist', amount);
 
     const health_factor = await this.sdk.accounts[0].getHealthFactor(
       this.sender.getPublicKey().toSuiAddress()
@@ -133,8 +150,10 @@ export class Navi implements LendingExecutor {
     );
     console.log('portfolio', portfolio);
 
+    const coin_info: CoinInfo = { symbol: coin_symbol, address: coin_type, decimal: decimals };
+
     console.log('sending transaction...');
-    const tx = await this.sdk.accounts[0].repay(USDT, amount);
-    console.log('tx', tx);
+    const tx = await this.sdk.accounts[0].repay(coin_info, amount);
+    console.log('tx result', tx);
   }
 }

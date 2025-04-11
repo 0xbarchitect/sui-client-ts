@@ -167,7 +167,8 @@ async function main() {
       coin_type: string,
       decimals: number,
       amount: number,
-      is_collateral: boolean
+      is_collateral: boolean,
+      coin_symbol: string
     ) => {
       console.log('Handle deposit with options:', {
         protocol,
@@ -175,10 +176,11 @@ async function main() {
         decimals,
         amount,
         is_collateral,
+        coin_symbol,
       });
       switch (protocol) {
         case 'navi':
-          await navi.deposit(coin_type, decimals, amount);
+          await navi.deposit(coin_type, decimals, amount, is_collateral, coin_symbol);
           break;
         case 'scallop':
           await scallop.deposit(coin_type, decimals, amount, is_collateral);
@@ -196,7 +198,8 @@ async function main() {
       coin_type: string,
       decimals: number,
       amount: number,
-      is_collateral: boolean
+      is_collateral: boolean,
+      coin_symbol: string
     ) => {
       console.log('Handle withdraw with options:', {
         protocol,
@@ -207,7 +210,7 @@ async function main() {
       });
       switch (protocol) {
         case 'navi':
-          await navi.withdraw(coin_type, decimals, amount);
+          await navi.withdraw(coin_type, decimals, amount, is_collateral, coin_symbol);
           break;
         case 'scallop':
           await scallop.withdraw(coin_type, decimals, amount, is_collateral);
@@ -224,7 +227,8 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      coin_symbol: string
     ) => {
       console.log('Handle borrow with options:', {
         protocol,
@@ -235,7 +239,7 @@ async function main() {
 
       switch (protocol) {
         case 'navi':
-          await navi.borrow(coin_type, decimals, amount);
+          await navi.borrow(coin_type, decimals, amount, coin_symbol);
           break;
         case 'scallop':
           await scallop.borrow(coin_type, decimals, amount);
@@ -252,7 +256,8 @@ async function main() {
       protocol: string,
       coin_type: string,
       decimals: number,
-      amount: number
+      amount: number,
+      coin_symbol: string
     ) => {
       console.log('Handle repay with options:', {
         protocol,
@@ -263,7 +268,7 @@ async function main() {
 
       switch (protocol) {
         case 'navi':
-          await navi.repay(coin_type, decimals, amount);
+          await navi.repay(coin_type, decimals, amount, coin_symbol);
           break;
         case 'scallop':
           await scallop.repay(coin_type, decimals, amount);

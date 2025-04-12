@@ -74,6 +74,8 @@ type RepayHandler = (
   coin_symbol: string
 ) => Promise<void>;
 
+type TxEventsHandler = (digest: string) => Promise<void>;
+
 export class CLICommand {
   program: Command;
 
@@ -87,6 +89,8 @@ export class CLICommand {
   private borrowHandler: BorrowHandler;
   private repayHandler: RepayHandler;
 
+  private txEventsHandler: TxEventsHandler;
+
   constructor(
     swapHandler: SwapHandler,
     addLiquidityHandler: AddLiquidityHandler,
@@ -95,7 +99,8 @@ export class CLICommand {
     depositHandler: DepositHandler,
     withdrawHandler: WithdrawHandler,
     borrowHandler: BorrowHandler,
-    repayHandler: RepayHandler
+    repayHandler: RepayHandler,
+    txEventsHandler: TxEventsHandler
   ) {
     this.program = new Command();
 
@@ -108,6 +113,8 @@ export class CLICommand {
     this.withdrawHandler = withdrawHandler;
     this.borrowHandler = borrowHandler;
     this.repayHandler = repayHandler;
+
+    this.txEventsHandler = txEventsHandler;
 
     this.program = this.program.version('1.0.0').description('DeFi CLI for SUI blockchain');
 
@@ -302,6 +309,19 @@ export class CLICommand {
       .action((options) => {
         console.log('Liquidating with options:', options);
         // Implement liquidate logic
+      });
+
+    // Query command groups
+    const queryCommand = this.program.command('query').description('Query related operations');
+
+    queryCommand
+      .command('tx-events')
+      .description('Get transaction events')
+      .option('--digest <digest>', 'Transaction digest')
+      .action(async (options) => {
+        console.log('Getting transaction events with options:', options);
+        // Implement tx events logic
+        await this.txEventsHandler(options.digest);
       });
   }
 }

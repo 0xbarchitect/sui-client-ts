@@ -276,6 +276,27 @@ async function main() {
       }
     };
 
+    const handle_query_hf = async (protocol: string, borrower: string) => {
+      console.log('Handle query HF with options:', {
+        protocol,
+        borrower,
+      });
+
+      switch (protocol) {
+        case 'navi':
+          await navi.queryHF(borrower);
+          break;
+        case 'scallop':
+          await scallop.queryHF(borrower);
+          break;
+        case 'suilend':
+          console.log('Suilend does not support query HF directly');
+          break;
+        default:
+          throw new Error(`Protocol ${protocol} not supported`);
+      }
+    };
+
     const cli = new CLICommand(
       handle_swap,
       handle_add_liquidity,
@@ -284,7 +305,8 @@ async function main() {
       handle_deposit,
       handle_withdraw,
       handle_borrow,
-      handle_repay
+      handle_repay,
+      handle_query_hf
     );
 
     cli.program.parse(process.argv);

@@ -146,4 +146,10 @@ export class ScallopExecutor implements LendingExecutor {
     );
     console.log('Repay result:', repayResult);
   }
+
+  async queryHF(borrower: string): Promise<void> {
+    let portfolio = await this.query!.getUserPortfolio({ walletAddress: borrower });
+
+    console.log('Borrower portfolio:', portfolio);
+  }
 }

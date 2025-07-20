@@ -137,4 +137,20 @@ export class Navi implements LendingExecutor {
     const tx = await this.sdk.accounts[0].repay(USDT, amount);
     console.log('tx', tx);
   }
+
+  async queryHF(borrower: string): Promise<void> {
+    console.log('Querying health factor for borrower:', borrower);
+
+    const portfolio = await this.sdk.accounts[0].getNAVIPortfolio(borrower);
+    console.log('Portfolio:', portfolio);
+
+    //const reward = await this.sdk.getAddressAvailableRewards(borrower);
+    //console.log('Available Rewards:', reward);
+
+    //const portfolios = await this.sdk.getAllNaviPortfolios();
+    //console.log('All Portfolios:', portfolios);
+
+    const health_factor = await this.sdk.getHealthFactor(borrower);
+    console.log('Health Factor:', health_factor);
+  }
 }

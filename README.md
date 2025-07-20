@@ -9,13 +9,13 @@ Typescript client code to interact with SUI Defi ecosystem.
 
 - Create `.env` file from template and fill in secrets
 
-## Install 
+## Install
 
 ```sh
 $ npm install
 ```
 
-## Build 
+## Build
 
 ```sh
 $ npm run build
@@ -25,4 +25,12 @@ $ npm run build
 
 ```sh
 $ npm run start
+```
+
+## Commands
+
+- Query borrower HF
+
+```sh
+$ npm run start -- lending hf --protocol PROTOCOL --borrower ADDRESS
 ```

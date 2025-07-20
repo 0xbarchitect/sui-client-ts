@@ -70,6 +70,11 @@ type RepayHandler = (
   amount: number
 ) => Promise<void>;
 
+type QueryHFHandler = (
+  protocol: string,
+  borrower: string,
+) => Promise<void>;
+
 export class CLICommand {
   program: Command;
 
@@ -82,6 +87,7 @@ export class CLICommand {
   private withdrawHandler: WithdrawHandler;
   private borrowHandler: BorrowHandler;
   private repayHandler: RepayHandler;
+  private queryHFHandler: QueryHFHandler;
 
   constructor(
     swapHandler: SwapHandler,
@@ -91,7 +97,8 @@ export class CLICommand {
     depositHandler: DepositHandler,
     withdrawHandler: WithdrawHandler,
     borrowHandler: BorrowHandler,
-    repayHandler: RepayHandler
+    repayHandler: RepayHandler,
+    queryHFHandler: QueryHFHandler,
   ) {
     this.program = new Command();
 
@@ -104,6 +111,7 @@ export class CLICommand {
     this.withdrawHandler = withdrawHandler;
     this.borrowHandler = borrowHandler;
     this.repayHandler = repayHandler;
+    this.queryHFHandler = queryHFHandler;
 
     this.program = this.program.version('1.0.0').description('DeFi CLI for SUI blockchain');
 
@@ -290,6 +298,17 @@ export class CLICommand {
       .action((options) => {
         console.log('Liquidating with options:', options);
         // Implement liquidate logic
+      });
+
+    lendingCommand
+      .command('hf')
+      .description('Query health factor of a borrower')
+      .option('--protocol <protocol>', 'Protocol name')
+      .option('--borrower <address>', 'Borrower address')
+      .action(async (options) => {
+        console.log('Querying health factor with options:', options);
+        // Implement query health factor logic
+        await this.queryHFHandler(options.protocol, options.borrower);
       });
   }
 }

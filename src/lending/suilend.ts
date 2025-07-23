@@ -273,16 +273,23 @@ export class Suilend implements LendingExecutor {
 
     console.log('Deposits::');
     obligations[0].deposits.forEach((deposit: any) => {
-      console.log(`Coin Type: ${deposit.coinType}, Amount: ${deposit.depositedAmount.toString()}`);
+      console.log(
+        `\tCoin Type: ${deposit.coinType}, Amount: ${deposit.depositedAmount.toString()}`
+      );
     });
 
     console.log('Borrows::');
     obligations[0].borrows.forEach((borrow: any) => {
-      console.log(`Coin Type: ${borrow.coinType}, Amount: ${borrow.borrowedAmount.toString()}`);
+      console.log(`\tCoin Type: ${borrow.coinType}, Amount: ${borrow.borrowedAmount.toString()}`);
     });
 
-    console.log('\n\n');
-    console.log('WeightedBorrowsUsd', obligations[0].weightedBorrowsUsd.toString());
-    console.log('UnhealthyBorrowValueUsd', obligations[0].unhealthyBorrowValueUsd.toString());
+    console.log('');
+    console.log('CollateralValueUsd', obligations[0].unhealthyBorrowValueUsd.toString());
+    console.log('DebtValueUsd', obligations[0].weightedBorrowsUsd.toString());
+
+    const hf: BigNumber = obligations[0].unhealthyBorrowValueUsd.div(
+      obligations[0].weightedBorrowsUsd
+    );
+    console.log('HF', hf.toString());
   }
 }

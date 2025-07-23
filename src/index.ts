@@ -290,7 +290,7 @@ async function main() {
           await scallop.queryHF(borrower);
           break;
         case 'suilend':
-          console.log('Suilend does not support query HF directly');
+          await suilend.queryHF(borrower);
           break;
         default:
           throw new Error(`Protocol ${protocol} not supported`);

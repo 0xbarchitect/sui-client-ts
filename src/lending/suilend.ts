@@ -22,6 +22,8 @@ export class Suilend implements LendingExecutor {
   private suiClient: SuiClient;
   private obligationOwnerCap?: ObligationOwnerCap<string>;
   private obligation?: any;
+  private refreshedRawReserves?: any;
+  private reserveMap?: any;
 
   constructor(network: 'mainnet' | 'testnet', sender: Ed25519Keypair) {
     this.sender = sender;
@@ -71,6 +73,8 @@ export class Suilend implements LendingExecutor {
 
     this.obligationOwnerCap = obligationOwnerCaps[0];
     this.obligation = obligations[0];
+    this.refreshedRawReserves = refreshedRawReserves;
+    this.reserveMap = reserveMap;
 
     console.log('Suilend client initialized:', this.client);
   }
@@ -251,5 +255,34 @@ export class Suilend implements LendingExecutor {
       },
     });
     console.log('Transaction result:', tx);
+  }
+
+  async queryHF(borrower: string): Promise<void> {
+    console.log('Suilend queryHF function called with borrower:', borrower);
+
+    const { obligationOwnerCaps, obligations } = await initializeObligations(
+      this.suiClient,
+      this.client!,
+      this.refreshedRawReserves!,
+      this.reserveMap!,
+      borrower
+    );
+
+    console.log('ObligationOwnerCaps:', obligationOwnerCaps);
+    console.log('Obligations:', obligations);
+
+    console.log('Deposits::');
+    obligations[0].deposits.forEach((deposit: any) => {
+      console.log(`Coin Type: ${deposit.coinType}, Amount: ${deposit.depositedAmount.toString()}`);
+    });
+
+    console.log('Borrows::');
+    obligations[0].borrows.forEach((borrow: any) => {
+      console.log(`Coin Type: ${borrow.coinType}, Amount: ${borrow.borrowedAmount.toString()}`);
+    });
+
+    console.log('\n\n');
+    console.log('WeightedBorrowsUsd', obligations[0].weightedBorrowsUsd.toString());
+    console.log('UnhealthyBorrowValueUsd', obligations[0].unhealthyBorrowValueUsd.toString());
   }
 }

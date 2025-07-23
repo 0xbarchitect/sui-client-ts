@@ -151,5 +151,28 @@ export class ScallopExecutor implements LendingExecutor {
     let portfolio = await this.query!.getUserPortfolio({ walletAddress: borrower });
 
     console.log('Borrower portfolio:', portfolio);
+
+    console.log('Lendings::');
+    portfolio.lendings.forEach((lending) => {
+      console.log(`\t${lending.coinType}, amount: ${lending.suppliedCoin}`);
+    });
+
+    console.log('Borrows::');
+    portfolio.borrowings.forEach((obligation) => {
+      console.log('Obligation:', obligation.obligationId);
+      console.log('Deposits::');
+      obligation.collaterals.forEach((deposit) => {
+        console.log(`\t${deposit.coinType}, Amount: ${deposit.depositedCoin.toString()}`);
+      });
+      console.log('Borrows::');
+      obligation.borrowedPools.forEach((borrow) => {
+        console.log(`\t${borrow.coinType}, Amount: ${borrow.borrowedCoin.toString()}`);
+      });
+
+      console.log('Total collateral in USD:', obligation.totalCollateralInUsd.toString());
+      console.log('Total debt in USD:', obligation.totalDebtsInUsd.toString());
+      const hf = 1 / obligation.riskLevel;
+      console.log('HF:', hf.toString());
+    });
   }
 }
